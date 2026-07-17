@@ -2,19 +2,23 @@
 
 import { useState, useTransition, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { signInWithEmail } from './actions';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get('error');
+  const urlSuccess = searchParams.get('success');
   
   const [error, setError] = useState(urlError);
+  const [success, setSuccess] = useState(urlSuccess);
   const [isPending, startTransition] = useTransition();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
+    setSuccess('');
     const formData = new FormData(event.currentTarget);
     
     startTransition(async () => {
@@ -55,11 +59,8 @@ function LoginForm() {
           </div>
         </div>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {success && <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">{success}</div>}
 
         <button
           type="submit"
@@ -68,6 +69,12 @@ function LoginForm() {
         >
           {isPending ? 'Signing in...' : 'Sign in'}
         </button>
+
+        <div className="text-center">
+          <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            Forgot your password?
+          </Link>
+        </div>
       </form>
     </div>
   );
