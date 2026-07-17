@@ -16,7 +16,7 @@
     "postgres": "^3.4.4",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.2",
-    "@neondatabase/auth": "latest"
+    "@clerk/nextjs": "^5.7.0"
   },
   "devDependencies": {
     "typescript": "^5",
