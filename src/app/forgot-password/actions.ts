@@ -4,11 +4,15 @@ export async function requestPasswordReset(formData: FormData) {
   const email = formData.get('email') as string;
   if (!email) return { error: 'Email is required' };
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Bulletproof URL detection for Vercel
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
   try {
-    // Fetch our own API route, which proxies the request to Neon Auth
-    const res = await fetch(`${baseUrl}/api/auth/forget-password`, {
+    const apiUrl = `${baseUrl}/api/auth/forget-password`;
+    console.log('🔍 Attempting to fetch reset password at:', apiUrl);
+
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -17,12 +21,17 @@ export async function requestPasswordReset(formData: FormData) {
       }),
     });
 
+    const data = await res.json().catch(() => ({}));
+    
     if (!res.ok) {
-      const data = await res.json();
-      return { error: data.error?.message || 'Failed to send reset email' };
+      console.error('❌ API Error Response:', data);
+      return { error: data.error?.message || `Failed with status ${res.status}` };
     }
-  } catch (error) {
-    return { error: 'Failed to send reset email. Please try again.' };
+    
+    console.log('✅ Reset email triggered successfully');
+  } catch (error: any) {
+    console.error('❌ Fetch Network Error:', error.message);
+    return { error: `Network error: ${error.message}. Check Vercel logs.` };
   }
 
   // We return success even if the email doesn't exist to prevent email enumeration
