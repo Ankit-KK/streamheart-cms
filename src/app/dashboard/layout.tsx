@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation';
 import UserProfile from '@/components/UserProfile';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // In Next.js 14 App Router, auth() is an async function
   const { userId } = await auth();
   const user = await currentUser();
 
+  // If no user is found, redirect to the Clerk sign-in page
   if (!userId) {
     redirect('/sign-in');
   }
@@ -25,7 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="p-4 border-t border-gray-200 mt-auto flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-500">Logged in as</p>
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.emailAddresses[0]?.emailAddress}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.emailAddresses[0]?.emailAddress}
+            </p>
           </div>
           <UserProfile />
         </div>
