@@ -1,11 +1,13 @@
-import { auth } from '@/lib/auth/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import UserProfile from '@/components/UserProfile';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { data: session } = await auth.getSession();
+  const { userId } = await auth();
+  const user = await currentUser();
 
-  if (!session?.user) {
-    redirect('/login');
+  if (!userId) {
+    redirect('/sign-in');
   }
 
   return (
@@ -14,9 +16,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="p-6">
           <h1 className="text-xl font-bold text-indigo-600">StreamHeart</h1>
         </div>
-        <div className="p-4 border-t border-gray-200 mt-auto">
-          <p className="text-xs text-gray-500">Logged in as</p>
-          <p className="text-sm font-medium text-gray-900 truncate">{session.user.email}</p>
+        <nav className="flex-1 px-4 space-y-2">
+          <a href="/dashboard" className="block px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 rounded-md">
+            Dashboard
+          </a>
+          {/* We will add Creators, Payouts, Financials here next */}
+        </nav>
+        <div className="p-4 border-t border-gray-200 mt-auto flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-500">Logged in as</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.emailAddresses[0]?.emailAddress}</p>
+          </div>
+          <UserProfile />
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
