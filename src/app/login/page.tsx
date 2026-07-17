@@ -1,14 +1,30 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmail } from './actions';
 
 export default function SignInForm() {
-  const [state, formAction, isPending] = useActionState(signInWithEmail, null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get('error');
+  
+  const [error, setError] = useState(urlError);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    const formData = new FormData(event.currentTarget);
+    
+    startTransition(async () => {
+      await signInWithEmail(formData);
+    });
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <form action={formAction} className="w-full max-w-md space-y-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">StreamHeart CMS</h2>
           <p className="mt-2 text-center text-sm text-gray-600">Sign in to your admin account</p>
@@ -39,9 +55,9 @@ export default function SignInForm() {
           </div>
         </div>
 
-        {state?.error && (
+        {error && (
           <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-            {state.error}
+            {error}
           </div>
         )}
 
