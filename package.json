@@ -8,14 +8,16 @@
     "start": "next start",
     "lint": "next lint"
   },
-  "dependencies": {
+    "dependencies": {
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18",
     "drizzle-orm": "^0.33.0",
     "postgres": "^3.4.4",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "next-auth": "^4.24.7",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "typescript": "^5",
