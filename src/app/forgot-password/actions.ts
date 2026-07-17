@@ -4,7 +4,6 @@ export async function requestPasswordReset(formData: FormData) {
   const email = formData.get('email') as string;
   if (!email) return { error: 'Email is required' };
 
-  // Bulletproof URL detection for Vercel
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
@@ -21,11 +20,21 @@ export async function requestPasswordReset(formData: FormData) {
       }),
     });
 
-    const data = await res.json().catch(() => ({}));
-    
+    // Read the raw text first to see exactly what Neon returns
+    const rawText = await res.text();
+    console.log('📡 Neon Auth Raw Response Status:', res.status);
+    console.log('📡 Neon Auth Raw Response Body:', rawText);
+
+    let data = {};
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      // If it's not JSON, it might be an HTML error page or plain text
+    }
+
     if (!res.ok) {
-      console.error('❌ API Error Response:', data);
-      return { error: data.error?.message || `Failed with status ${res.status}` };
+      const errorMsg = (data as any).error?.message || rawText || `Failed with status ${res.status}`;
+      return { error: errorMsg };
     }
     
     console.log('✅ Reset email triggered successfully');
@@ -34,6 +43,5 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: `Network error: ${error.message}. Check Vercel logs.` };
   }
 
-  // We return success even if the email doesn't exist to prevent email enumeration
   return { success: 'If an account with this email exists, a password reset link has been sent.' };
 }
