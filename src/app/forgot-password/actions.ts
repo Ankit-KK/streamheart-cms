@@ -9,7 +9,7 @@ export async function requestPasswordReset(formData: FormData) {
   // Use the Vercel URL to generate the correct reset link
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  const { error } = await auth.forgetPassword({
+  const { error } = await auth.sendResetPassword({
     email,
     redirectTo: `${baseUrl}/reset-password`,
   });
