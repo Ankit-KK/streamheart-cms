@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <a href="/dashboard" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Dashboard
           </a>
-          <a href="/creators" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+          <a href="/dashboard/creators" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Creators
           </a>
           {/* We will add Payouts and Financials here in Step 4 */}
