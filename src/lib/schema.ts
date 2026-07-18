@@ -13,3 +13,15 @@ export const creators = pgTable('creators', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+export const creatorFinancials = pgTable('creator_financials', {
+  creatorId: uuid('creator_id').primaryKey(),
+  legalName: text('legal_name'),
+  panNumber: text('pan_number'),
+  upiId: text('upi_id'),
+  bankName: text('bank_name'),
+  accountHolderName: text('account_holder_name'),
+  accountNumberLast4: text('account_number_last4'),
+  ifsc: text('ifsc'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
