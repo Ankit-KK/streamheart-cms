@@ -42,6 +42,9 @@ export async function addCreator(formData: FormData): Promise<void> {
     redirect('/dashboard/creators?error=Creator Handle and Code are required.');
   }
 
+  // Determine where to redirect based on the outcome
+  let redirectUrl = '/dashboard/creators';
+
   try {
     await db.transaction(async (tx) => {
       const [newCreator] = await tx.insert(creators).values({
@@ -67,17 +70,19 @@ export async function addCreator(formData: FormData): Promise<void> {
     });
     
     revalidatePath('/dashboard/creators');
-    redirect('/dashboard/creators?success=Creator and financial details added successfully!');
+    redirectUrl = '/dashboard/creators?success=Creator and financial details added successfully!';
+    
   } catch (error: any) {
     const errMsg = error.message || String(error);
     
-    // If it's a duplicate error, show the clean message
     if (errMsg.includes('unique') || errMsg.includes('duplicate')) {
-      redirect('/dashboard/creators?error=A creator with this handle or code already exists.');
+      redirectUrl = '/dashboard/creators?error=A creator with this handle or code already exists.';
+    } else {
+      console.error('DB Error:', errMsg);
+      redirectUrl = `/dashboard/creators?error=Raw DB Error: ${encodeURIComponent(errMsg)}`;
     }
-    
-    // For ANY other error, show the raw database error on the screen
-    console.error('DB Error:', errMsg);
-    redirect(`/dashboard/creators?error=Raw DB Error: ${encodeURIComponent(errMsg)}`);
   }
+
+  // Redirect OUTSIDE the try/catch block so Next.js doesn't catch its own redirect error
+  redirect(redirectUrl);
 }
