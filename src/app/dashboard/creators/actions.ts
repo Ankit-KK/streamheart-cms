@@ -8,7 +8,17 @@ import { redirect } from 'next/navigation';
 
 // Accept an optional search term
 export async function getCreators(searchTerm?: string) {
-  let query = db
+  // Build the where condition dynamically. If searchTerm is empty, this is undefined.
+  const whereCondition = searchTerm 
+    ? or(
+        ilike(creators.creatorHandle, `%${searchTerm}%`),
+        ilike(creators.creatorCode, `%${searchTerm}%`),
+        ilike(creators.email, `%${searchTerm}%`)
+      )
+    : undefined;
+
+  // Pass the condition directly into the chain. Drizzle ignores .where(undefined)
+  const allCreators = await db
     .select({
       id: creators.id,
       creatorHandle: creators.creatorHandle,
@@ -19,21 +29,10 @@ export async function getCreators(searchTerm?: string) {
       upiId: creatorFinancials.upiId,
     })
     .from(creators)
-    .leftJoin(creatorFinancials, eq(creators.id, creatorFinancials.creatorId));
-
-  // If a search term is provided, filter the results
-  if (searchTerm) {
-    const search = `%${searchTerm}%`;
-    query = query.where(
-      or(
-        ilike(creators.creatorHandle, search),
-        ilike(creators.creatorCode, search),
-        ilike(creators.email, search)
-      )
-    );
-  }
-
-  const allCreators = await query.orderBy(desc(creators.createdAt));
+    .leftJoin(creatorFinancials, eq(creators.id, creatorFinancials.creatorId))
+    .where(whereCondition)
+    .orderBy(desc(creators.createdAt));
+    
   return allCreators;
 }
 
