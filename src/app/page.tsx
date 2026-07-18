@@ -8,5 +8,6 @@ export default async function Home() {
     redirect('/dashboard');
   }
 
+  // Always redirect to sign-in, never sign-up
   redirect('/sign-in');
 }
