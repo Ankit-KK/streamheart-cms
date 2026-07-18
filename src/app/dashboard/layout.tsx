@@ -3,11 +3,9 @@ import { redirect } from 'next/navigation';
 import UserProfile from '@/components/UserProfile';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // In Next.js 14 App Router, auth() is an async function
   const { userId } = await auth();
   const user = await currentUser();
 
-  // If no user is found, redirect to the Clerk sign-in page
   if (!userId) {
     redirect('/sign-in');
   }
@@ -19,10 +17,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <h1 className="text-xl font-bold text-indigo-600">StreamHeart</h1>
         </div>
         <nav className="flex-1 px-4 space-y-2">
-          <a href="/dashboard" className="block px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 rounded-md">
+          <a href="/dashboard" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Dashboard
           </a>
-          {/* We will add Creators, Payouts, Financials here next */}
+          <a href="/creators" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+            Creators
+          </a>
+          {/* We will add Payouts and Financials here in Step 4 */}
         </nav>
         <div className="p-4 border-t border-gray-200 mt-auto flex items-center gap-3">
           <div className="flex-1 min-w-0">
