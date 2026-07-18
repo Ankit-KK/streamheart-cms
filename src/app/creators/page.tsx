@@ -1,21 +1,37 @@
 import { getCreators, addCreator } from './actions';
 
-export default async function CreatorsPage() {
+export default async function CreatorsPage(props: {
+  searchParams: Promise<{ error?: string; success?: string }>;
+}) {
+  const searchParams = await props.searchParams;
   const allCreators = await getCreators();
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Creators Management</h1>
       
+      {/* Success/Error Messages */}
+      {searchParams.error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-md">
+          <p className="text-red-700 font-medium">{searchParams.error}</p>
+        </div>
+      )}
+      
+      {searchParams.success && (
+        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-md">
+          <p className="text-green-700 font-medium">{searchParams.success}</p>
+        </div>
+      )}
+
       {/* Add Creator Form */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New Creator</h2>
         <form action={addCreator} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <input name="handle" type="text" required placeholder="Creator Handle" className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" />
-          <input name="code" type="text" required placeholder="Creator Code" className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" />
-          <input name="upi" type="text" required placeholder="UPI ID" className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" />
-          <input name="rate" type="number" required placeholder="Payout %" className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2" />
-          <button type="submit" className="bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-500 transition-colors">
+          <input name="handle" type="text" required placeholder="Creator Handle" className="rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+          <input name="code" type="text" required placeholder="Creator Code" className="rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+          <input name="upi" type="text" required placeholder="UPI ID" className="rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+          <input name="rate" type="number" required placeholder="Payout %" className="rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+          <button type="submit" className="bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-500 transition-colors py-2">
             Add Creator
           </button>
         </form>
@@ -46,9 +62,9 @@ export default async function CreatorsPage() {
                 </tr>
               ) : (
                 allCreators.map((creator) => (
-                  <tr key={creator.id} className="hover:bg-gray-50">
+                  <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@{creator.creatorHandle}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.creatorCode}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{creator.creatorCode}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.upiId}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.payoutRate}%</td>
                     <td className="px-6 py-4 whitespace-nowrap">
