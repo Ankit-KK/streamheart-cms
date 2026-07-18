@@ -6,33 +6,36 @@ import { desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-// Fetch all creators
 export async function getCreators() {
   const allCreators = await db.select().from(creators).orderBy(desc(creators.createdAt));
   return allCreators;
 }
 
-// Add a new creator
 export async function addCreator(formData: FormData): Promise<void> {
   const handle = formData.get('handle') as string;
   const code = formData.get('code') as string;
-  const upi = formData.get('upi') as string;
-  const rateStr = formData.get('rate') as string;
-  const rate = parseInt(rateStr, 10);
+  const email = formData.get('email') as string;
+  const contactEmail = formData.get('contactEmail') as string;
+  const phone = formData.get('phone') as string;
+  const rate = formData.get('rate') as string;
+  const notes = formData.get('notes') as string;
 
-  if (!handle || !code || !upi || isNaN(rate)) {
-    redirect('/creators?error=All fields are required and rate must be a number.');
+  if (!handle || !code) {
+    redirect('/creators?error=Creator Handle and Code are required.');
   }
 
   try {
     await db.insert(creators).values({
       creatorHandle: handle.toLowerCase().trim(),
       creatorCode: code.toUpperCase().trim(),
-      upiId: upi.trim(),
-      payoutRate: rate,
+      email: email || null,
+      contactEmail: contactEmail || null,
+      phoneNumber: phone || null,
+      payoutRate: rate || null,
+      notes: notes || null,
+      status: 'ACTIVE',
     });
     
-    // Refresh the page data automatically
     revalidatePath('/creators');
     redirect('/creators?success=Creator added successfully.');
   } catch (error: any) {
