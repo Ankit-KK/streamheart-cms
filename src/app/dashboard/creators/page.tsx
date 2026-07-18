@@ -1,4 +1,4 @@
-import { getCreators, addCreator } from './actions';
+import { getCreators, addCreator, toggleCreatorStatus } from './actions';
 import Link from 'next/link';
 
 export default async function CreatorsPage(props: {
@@ -12,6 +12,7 @@ export default async function CreatorsPage(props: {
 
   return (
     <div>
+      {/* Back Navigation */}
       <Link href="/dashboard" className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500 mb-4 font-medium">
         ← Back to Dashboard
       </Link>
@@ -39,6 +40,7 @@ export default async function CreatorsPage(props: {
         </form>
       </div>
       
+      {/* Alerts */}
       {searchParams.error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-md">
           <p className="text-red-700 font-medium">{searchParams.error}</p>
@@ -89,7 +91,7 @@ export default async function CreatorsPage(props: {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-800">
-            {searchTerm ? `Search Results (${allCreators.length})` : `Active Creators (${allCreators.length})`}
+            {searchTerm ? `Search Results (${allCreators.length})` : `All Creators (${allCreators.length})`}
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -101,31 +103,51 @@ export default async function CreatorsPage(props: {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UPI ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payout %</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {allCreators.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     {searchTerm ? `No creators found matching "${searchTerm}".` : 'No creators found. Add your first creator above!'}
                   </td>
                 </tr>
               ) : (
-                allCreators.map((creator) => (
-                  <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@{creator.creatorHandle}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{creator.creatorCode}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.upiId || <span className="text-gray-400 italic">Not set</span>}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.payoutRate ? `${creator.payoutRate}%` : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        creator.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {creator.status || 'ACTIVE'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                allCreators.map((creator) => {
+                  const isActive = creator.status === 'ACTIVE';
+                  return (
+                    <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@{creator.creatorHandle}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{creator.creatorCode}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.upiId || <span className="text-gray-400 italic">Not set</span>}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creator.payoutRate ? `${creator.payoutRate}%` : '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {creator.status || 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <form action={toggleCreatorStatus}>
+                          <input type="hidden" name="id" value={creator.id} />
+                          <input type="hidden" name="status" value={creator.status || 'ACTIVE'} />
+                          <button 
+                            type="submit" 
+                            className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                              isActive 
+                                ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                            }`}
+                          >
+                            {isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
