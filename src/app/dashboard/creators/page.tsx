@@ -2,19 +2,42 @@ import { getCreators, addCreator } from './actions';
 import Link from 'next/link';
 
 export default async function CreatorsPage(props: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; search?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const allCreators = await getCreators();
+  const searchTerm = searchParams.search;
+  
+  // Pass the search term to the server action
+  const allCreators = await getCreators(searchTerm);
 
   return (
     <div>
-      {/* Back Navigation */}
       <Link href="/dashboard" className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500 mb-4 font-medium">
         ← Back to Dashboard
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Creators Management</h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-900">Creators Management</h1>
+        
+        {/* Search Form */}
+        <form action="/dashboard/creators" method="GET" className="flex gap-2">
+          <input 
+            name="search" 
+            defaultValue={searchTerm}
+            type="text" 
+            placeholder="Search by handle, code, or email..." 
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none w-64" 
+          />
+          <button type="submit" className="bg-indigo-600 text-white text-sm font-medium rounded-md px-4 py-2 hover:bg-indigo-500 transition-colors">
+            Search
+          </button>
+          {searchTerm && (
+            <Link href="/dashboard/creators" className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 underline">
+              Clear
+            </Link>
+          )}
+        </form>
+      </div>
       
       {searchParams.error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-md">
@@ -64,8 +87,10 @@ export default async function CreatorsPage(props: {
 
       {/* Creators Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Active Creators ({allCreators.length})</h2>
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {searchTerm ? `Search Results (${allCreators.length})` : `Active Creators (${allCreators.length})`}
+          </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -82,7 +107,7 @@ export default async function CreatorsPage(props: {
               {allCreators.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No creators found. Add your first creator above!
+                    {searchTerm ? `No creators found matching "${searchTerm}".` : 'No creators found. Add your first creator above!'}
                   </td>
                 </tr>
               ) : (
