@@ -1,11 +1,15 @@
-import { pgTable, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, numeric, timestamp } from 'drizzle-orm/pg-core';
 
 export const creators = pgTable('creators', {
   id: uuid('id').primaryKey().defaultRandom(),
-  creatorHandle: text('creator_handle').notNull().unique(),
-  creatorCode: text('creator_code').notNull().unique(),
-  upiId: text('upi_id').notNull(),
-  payoutRate: integer('payout_rate').notNull(), // Stored as percentage (e.g., 89)
-  status: text('status').notNull().default('ACTIVE'),
+  creatorHandle: text('creator_handle').notNull(),
+  creatorCode: text('creator_code').notNull(),
+  email: text('email'),
+  phoneNumber: text('phone_number'),
+  payoutRate: numeric('payout_rate'),
+  status: text('status').default('ACTIVE'),
+  notes: text('notes'),
+  contactEmail: text('contact_email'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
