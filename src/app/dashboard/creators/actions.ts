@@ -6,9 +6,8 @@ import { desc, eq, ilike, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-// Accept an optional search term
+// Fetch creators with optional search and JOIN financial details
 export async function getCreators(searchTerm?: string) {
-  // Build the where condition dynamically. If searchTerm is empty, this is undefined.
   const whereCondition = searchTerm 
     ? or(
         ilike(creators.creatorHandle, `%${searchTerm}%`),
@@ -17,7 +16,6 @@ export async function getCreators(searchTerm?: string) {
       )
     : undefined;
 
-  // Pass the condition directly into the chain. Drizzle ignores .where(undefined)
   const allCreators = await db
     .select({
       id: creators.id,
@@ -36,6 +34,7 @@ export async function getCreators(searchTerm?: string) {
   return allCreators;
 }
 
+// Add a creator AND their financial details in one secure transaction
 export async function addCreator(formData: FormData): Promise<void> {
   const handle = formData.get('handle') as string;
   const code = formData.get('code') as string;
@@ -94,5 +93,34 @@ export async function addCreator(formData: FormData): Promise<void> {
     }
   }
 
+  redirect(redirectUrl);
+}
+
+// Toggle creator status between ACTIVE and INACTIVE
+export async function toggleCreatorStatus(formData: FormData): Promise<void> {
+  const id = formData.get('id') as string;
+  const currentStatus = formData.get('status') as string;
+  
+  // Toggle logic
+  const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+  let redirectUrl = '/dashboard/creators';
+
+  try {
+    await db.update(creators)
+      .set({ 
+        status: newStatus,
+        updatedAt: new Date() 
+      })
+      .where(eq(creators.id, id));
+      
+    revalidatePath('/dashboard/creators');
+    redirectUrl = `/dashboard/creators?success=Creator status updated to ${newStatus}.`;
+  } catch (error: any) {
+    console.error('Failed to update status:', error);
+    redirectUrl = `/dashboard/creators?error=Failed to update creator status.`;
+  }
+  
+  // Redirect OUTSIDE the try/catch block
   redirect(redirectUrl);
 }
