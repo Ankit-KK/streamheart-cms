@@ -69,10 +69,15 @@ export async function addCreator(formData: FormData): Promise<void> {
     revalidatePath('/dashboard/creators');
     redirect('/dashboard/creators?success=Creator and financial details added successfully!');
   } catch (error: any) {
-    if (error.message?.includes('unique') || error.message?.includes('duplicate')) {
+    const errMsg = error.message || String(error);
+    
+    // If it's a duplicate error, show the clean message
+    if (errMsg.includes('unique') || errMsg.includes('duplicate')) {
       redirect('/dashboard/creators?error=A creator with this handle or code already exists.');
     }
-    console.error('DB Error:', error);
-    redirect('/dashboard/creators?error=Failed to add creator. Check server logs.');
+    
+    // For ANY other error, show the raw database error on the screen
+    console.error('DB Error:', errMsg);
+    redirect(`/dashboard/creators?error=Raw DB Error: ${encodeURIComponent(errMsg)}`);
   }
 }
