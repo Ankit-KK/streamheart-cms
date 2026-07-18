@@ -2,12 +2,13 @@
 
 import { db } from '@/lib/db';
 import { creators, creatorFinancials } from '@/lib/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, ilike, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function getCreators() {
-  const allCreators = await db
+// Accept an optional search term
+export async function getCreators(searchTerm?: string) {
+  let query = db
     .select({
       id: creators.id,
       creatorHandle: creators.creatorHandle,
@@ -18,9 +19,21 @@ export async function getCreators() {
       upiId: creatorFinancials.upiId,
     })
     .from(creators)
-    .leftJoin(creatorFinancials, eq(creators.id, creatorFinancials.creatorId))
-    .orderBy(desc(creators.createdAt));
-    
+    .leftJoin(creatorFinancials, eq(creators.id, creatorFinancials.creatorId));
+
+  // If a search term is provided, filter the results
+  if (searchTerm) {
+    const search = `%${searchTerm}%`;
+    query = query.where(
+      or(
+        ilike(creators.creatorHandle, search),
+        ilike(creators.creatorCode, search),
+        ilike(creators.email, search)
+      )
+    );
+  }
+
+  const allCreators = await query.orderBy(desc(creators.createdAt));
   return allCreators;
 }
 
@@ -42,7 +55,6 @@ export async function addCreator(formData: FormData): Promise<void> {
     redirect('/dashboard/creators?error=Creator Handle and Code are required.');
   }
 
-  // Determine where to redirect based on the outcome
   let redirectUrl = '/dashboard/creators';
 
   try {
@@ -83,6 +95,5 @@ export async function addCreator(formData: FormData): Promise<void> {
     }
   }
 
-  // Redirect OUTSIDE the try/catch block so Next.js doesn't catch its own redirect error
   redirect(redirectUrl);
 }
