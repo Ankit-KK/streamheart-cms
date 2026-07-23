@@ -23,7 +23,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <a href="/dashboard/creators" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Creators
           </a>
-          {/* We will add Payouts and Financials here in Step 4 */}
+          <a href="/dashboard/payouts" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+            Payouts
+          </a>
         </nav>
         <div className="p-4 border-t border-gray-200 mt-auto flex items-center gap-3">
           <div className="flex-1 min-w-0">
