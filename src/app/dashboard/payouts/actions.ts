@@ -52,24 +52,25 @@ export async function recordPayout(formData: FormData): Promise<void> {
   const transactionRef = formData.get('transactionRef') as string;
   const paymentMethod = formData.get('paymentMethod') as string;
 
-  const grossInr = parseInt(grossInrStr, 10) || 0;
-  const refundsInr = parseInt(refundsInrStr, 10) || 0;
+  // 1. Convert Rupees (from form) to Paise (for database) by multiplying by 100
+  const grossInrPaise = Math.round(parseFloat(grossInrStr) * 100) || 0;
+  const refundsInrPaise = Math.round(parseFloat(refundsInrStr) * 100) || 0;
   const payoutRate = parseFloat(payoutRateStr) || 0;
   
-  // Calculate Net Payout: (Gross - Refunds) * (Payout Rate / 100)
-  const netPayoutInr = Math.round((grossInr - refundsInr) * (payoutRate / 100));
+  // 2. Calculate Net Payout in Paise: (Gross - Refunds) * (Payout Rate / 100)
+  const netPayoutInrPaise = Math.round((grossInrPaise - refundsInrPaise) * (payoutRate / 100));
 
   let redirectUrl = '/dashboard/payouts';
 
   try {
     await db.transaction(async (tx) => {
-      // 1. Insert payout history record
+      // 1. Insert payout history record (values are in Paise)
       await tx.insert(payoutHistory).values({
         creatorId,
-        grossInr,
-        refundsInr,
+        grossInr: grossInrPaise,
+        refundsInr: refundsInrPaise,
         payoutRate,
-        netPayoutInr,
+        netPayoutInr: netPayoutInrPaise,
         periodStart,
         periodEnd,
         status: 'COMPLETED',
@@ -78,15 +79,15 @@ export async function recordPayout(formData: FormData): Promise<void> {
         processedAt: new Date(),
       });
 
-      // 2. Update creator ledger (Upsert: Insert new or add to existing total)
+      // 2. Update creator ledger (Upsert: Insert new or add to existing total in Paise)
       await tx.insert(creatorLedger).values({
         creatorId,
-        totalPaidOutInr: netPayoutInr,
+        totalPaidOutInr: netPayoutInrPaise,
         updatedAt: new Date(),
       }).onConflictDoUpdate({
         target: creatorLedger.creatorId,
         set: {
-          totalPaidOutInr: sql`${creatorLedger.totalPaidOutInr} + ${netPayoutInr}`,
+          totalPaidOutInr: sql`${creatorLedger.totalPaidOutInr} + ${netPayoutInrPaise}`,
           updatedAt: new Date(),
         },
       });
