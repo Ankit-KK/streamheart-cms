@@ -8,13 +8,24 @@ const formatToRupees = (paise: number | null | undefined) => {
 };
 
 export default async function PayoutsPage(props: {
-  searchParams: Promise<{ error?: string; success?: string; tab?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; tab?: string; creatorSearch?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const activeTab = searchParams.tab || 'history'; // Default to history
+  
+  // 1. Default to 'new' tab instead of 'history'
+  const activeTab = searchParams.tab || 'new'; 
+  const searchTerm = searchParams.creatorSearch;
   
   const payouts = await getPayouts();
-  const activeCreators = await getActiveCreators();
+  const allActiveCreators = await getActiveCreators();
+
+  // 2. Filter creators based on the search term (case-insensitive)
+  const filteredCreators = searchTerm 
+    ? allActiveCreators.filter(c => 
+        c.creatorHandle.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        c.creatorCode.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : allActiveCreators;
 
   return (
     <div>
@@ -29,16 +40,7 @@ export default async function PayoutsPage(props: {
         
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            <Link 
-              href="/dashboard/payouts?tab=history"
-              className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
-                activeTab === 'history'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              📊 Payout History ({payouts.length})
-            </Link>
+            {/* TAB 1: Record New Payout (Now First) */}
             <Link 
               href="/dashboard/payouts?tab=new"
               className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
@@ -48,6 +50,18 @@ export default async function PayoutsPage(props: {
               }`}
             >
               ➕ Record New Payout
+            </Link>
+            
+            {/* TAB 2: Payout History (Now Second) */}
+            <Link 
+              href="/dashboard/payouts?tab=history"
+              className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
+                activeTab === 'history'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              📊 Payout History ({payouts.length})
             </Link>
           </nav>
         </div>
@@ -73,16 +87,42 @@ export default async function PayoutsPage(props: {
           <form action={recordPayout} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               
+              {/* Creator Search & Select */}
               <div className="lg:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Creator *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search & Select Creator *</label>
+                
+                {/* Separate Search Form (Doesn't interfere with the main payout form) */}
+                <form action="/dashboard/payouts" method="GET" className="flex gap-2 mb-2">
+                  <input type="hidden" name="tab" value="new" />
+                  <input 
+                    name="creatorSearch" 
+                    type="text" 
+                    placeholder="Search by handle or code..." 
+                    defaultValue={searchTerm || ''}
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" 
+                  />
+                  <button type="submit" className="bg-gray-200 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-300 transition-colors">
+                    Search
+                  </button>
+                  {searchTerm && (
+                    <Link href="/dashboard/payouts?tab=new" className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 underline flex items-center">
+                      Clear
+                    </Link>
+                  )}
+                </form>
+
+                {/* Filtered Dropdown */}
                 <select name="creatorId" required className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
                   <option value="">-- Choose an active creator --</option>
-                  {activeCreators.map((c) => (
+                  {filteredCreators.map((c) => (
                     <option key={c.id} value={c.id}>
                       @{c.creatorHandle} ({c.creatorCode}) - Rate: {c.payoutRate}%
                     </option>
                   ))}
                 </select>
+                {searchTerm && filteredCreators.length === 0 && (
+                  <p className="text-sm text-red-500 mt-1">No creators found matching "{searchTerm}".</p>
+                )}
               </div>
 
               <div>
