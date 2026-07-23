@@ -1,6 +1,12 @@
 import { getPayouts, getActiveCreators, recordPayout } from './actions';
 import Link from 'next/link';
 
+// Helper function to convert Paise (from DB) to formatted Rupees (for UI)
+const formatToRupees = (paise: number | null | undefined) => {
+  if (!paise) return '₹0.00';
+  return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export default async function PayoutsPage(props: {
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
@@ -49,18 +55,18 @@ export default async function PayoutsPage(props: {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gross Amount (INR) *</label>
-              <input name="grossInr" type="number" required min="0" step="1" placeholder="e.g. 50000" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gross Amount (₹) *</label>
+              <input name="grossInr" type="number" required min="0" step="0.01" placeholder="e.g. 500.00" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Refunds (INR)</label>
-              <input name="refundsInr" type="number" min="0" step="1" defaultValue="0" placeholder="e.g. 0" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Refunds (₹)</label>
+              <input name="refundsInr" type="number" min="0" step="0.01" defaultValue="0" placeholder="e.g. 0.00" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Payout Rate (%) *</label>
-              <input name="payoutRate" type="number" required min="0" max="100" step="0.01" placeholder="e.g. 85" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
+              <input name="payoutRate" type="number" required min="0" max="100" step="0.01" placeholder="e.g. 85.00" className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" />
             </div>
 
             <div>
@@ -105,10 +111,10 @@ export default async function PayoutsPage(props: {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creator</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross (₹)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refunds (₹)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate (%)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payout (₹)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refunds</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status / Ref</th>
               </tr>
             </thead>
@@ -129,10 +135,10 @@ export default async function PayoutsPage(props: {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {p.periodStart ? new Date(p.periodStart).toLocaleDateString() : '-'} to {p.periodEnd ? new Date(p.periodEnd).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{p.grossInr?.toLocaleString() || '0'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">₹{p.refundsInr?.toLocaleString() || '0'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{formatToRupees(p.grossInr)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">{formatToRupees(p.refundsInr)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.payoutRate}%</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-700">₹{p.netPayoutInr?.toLocaleString() || '0'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-700">{formatToRupees(p.netPayoutInr)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         p.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
