@@ -52,19 +52,18 @@ export async function recordPayout(formData: FormData): Promise<void> {
   const transactionRef = formData.get('transactionRef') as string;
   const paymentMethod = formData.get('paymentMethod') as string;
 
-  // 1. Convert Rupees (from form) to Paise (for database) by multiplying by 100
+  // Convert Rupees (from form) to Paise (for database)
   const grossInrPaise = Math.round(parseFloat(grossInrStr) * 100) || 0;
   const refundsInrPaise = Math.round(parseFloat(refundsInrStr) * 100) || 0;
   const payoutRate = parseFloat(payoutRateStr) || 0;
   
-  // 2. Calculate Net Payout in Paise: (Gross - Refunds) * (Payout Rate / 100)
+  // Calculate Net Payout in Paise
   const netPayoutInrPaise = Math.round((grossInrPaise - refundsInrPaise) * (payoutRate / 100));
 
-  let redirectUrl = '/dashboard/payouts';
+  let redirectUrl = '/dashboard/payouts?tab=history'; // Default to history tab
 
   try {
     await db.transaction(async (tx) => {
-      // 1. Insert payout history record (values are in Paise)
       await tx.insert(payoutHistory).values({
         creatorId,
         grossInr: grossInrPaise,
@@ -79,7 +78,6 @@ export async function recordPayout(formData: FormData): Promise<void> {
         processedAt: new Date(),
       });
 
-      // 2. Update creator ledger (Upsert: Insert new or add to existing total in Paise)
       await tx.insert(creatorLedger).values({
         creatorId,
         totalPaidOutInr: netPayoutInrPaise,
@@ -94,10 +92,10 @@ export async function recordPayout(formData: FormData): Promise<void> {
     });
 
     revalidatePath('/dashboard/payouts');
-    redirectUrl = '/dashboard/payouts?success=Payout recorded and ledger updated successfully!';
+    redirectUrl = '/dashboard/payouts?tab=history&success=Payout recorded and ledger updated successfully!';
   } catch (error: any) {
     console.error('Payout DB Error:', error);
-    redirectUrl = `/dashboard/payouts?error=Raw DB Error: ${encodeURIComponent(error.message || String(error))}`;
+    redirectUrl = `/dashboard/payouts?tab=new&error=Raw DB Error: ${encodeURIComponent(error.message || String(error))}`;
   }
 
   redirect(redirectUrl);
